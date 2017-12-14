@@ -9,8 +9,11 @@ https://github.com/junzis/pyModeS
 Currently in development, this should be taken as alpha at best.  
 
 Arguments: 
+
 -c config file location
--i ipaddress (not a hostname) 
+
+-i ipaddress (not a hostname)
+
 -p port 
 
 python planefinder.py -i <IPAddress> -p <PORT> -c <FILENAME>
