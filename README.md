@@ -6,12 +6,12 @@ an instance of dump1090
 This program requires pyModeS which can be found at:
 https://github.com/junzis/pyModeS
 
-Currently in development, this should be taken as alpha at best. 
+Currently in development, this should be taken as alpha at best.  
 
-Arguments:
--c config file location
--i ipaddress (not a hostname)
--p port
+Arguments: 
+-c config file location 
+-i ipaddress (not a hostname) 
+-p port 
 
 python planefinder.py -i <IPAddress> -p <PORT> -c <FILENAME>
 
