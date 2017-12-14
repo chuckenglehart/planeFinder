@@ -106,11 +106,12 @@ except socket.gaierror:
 
 	
 	
-#Main while loop
+# Main while loop
 #TODO: Exit gracefully
 while True:
 	line = getLine(s)
-	#there is a star in the beginning and a semi colon at the endS
+	#there is a star in the beginning and a semi colon at the endS. 
+	#could look into why more. 
 	ic = pms.adsb.icao(line)
 	if ic not in desiredIC:
 		continue#pass
