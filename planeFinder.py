@@ -1,3 +1,5 @@
+#This has been rewritten to target Python3
+
 import sys
 import pyModeS as pms
 import socket
@@ -11,11 +13,12 @@ import time
 def getLine(socket):
 	ret = ""
 	while True:
-		char = socket.recv(1)
-		if char == "\n":
-			break
-		elif char != "\n" and char != "*" and char != ";":
-			ret+=char
+		char = socket.recv(1).decode()
+		#print("Got a byte:",str(char))
+		if str(char) == str('\n'):
+			return ret
+		elif str(char) != '\n' and str(char) != '*' and char != ';':
+			ret+=str(char)
 	return ret
 
 #Quick function to see if a character is a hex
@@ -53,7 +56,7 @@ for x in range(0,num_args):
 	if skip == 1:
 		skip = 0
 	elif x == 0: # skip this since it is the function callable
-		print "Function called is:",sys.argv[x]
+		print("Function called is:",sys.argv[x])
 	elif sys.argv[x] == "-c":
 		config_file = sys.argv[x+1]
 		skip = 1
@@ -64,7 +67,7 @@ for x in range(0,num_args):
 		port = int(sys.argv[x+1])
 		skip = 1
 	else:
-		print "Unknown argument:", sys.argv[x]
+		print("Unknown argument:", sys.argv[x])
 
 		
 
@@ -72,7 +75,7 @@ for x in range(0,num_args):
 try:
 	f = open(config_file, "r") #opens file with name of "test.txt"
 except:
-	print "Error opening config file:",config_file
+	print("Error opening config file:",config_file)
 	sys.exit()
 	
 	
@@ -93,10 +96,10 @@ for line in f:
 		#print "Reg not implemented yet, not adding:",line
 		pass
 	else:
-		print "Unknown config line:",line," ",len(line)
+		print("Unknown config line:",line," ",len(line))
 
 f.close()
-print "List of icao:",desiredIC
+print("List of icao:",desiredIC)
 
 
 
@@ -106,7 +109,7 @@ try:
     s.connect((ip_addr,port))
 except socket.gaierror:
     # this means could not connect
-    print "there was an error connecting to", ip_addr,":",port
+    print("There was an error connecting to ", ip_addr,":",port)
     sys.exit()
 
 	
@@ -168,7 +171,7 @@ while True:
 	# Always print output
 	# Need to fix this up to make it more operational
 	if to_write:	
-		print sout
+		print(sout)
 		
 	# If print to file
 	if to_write:
@@ -179,6 +182,8 @@ while True:
 	to_write = 0
 	#log data if it matches the icao in list
 
+	
+#TODO: After exiting main loop do something useful
 
 s.close()
 
