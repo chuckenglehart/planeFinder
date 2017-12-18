@@ -31,8 +31,6 @@ def ishex(string):
 	return True
 	
 	
-	
-	
 if __name__ == '__main__':	
 	ref_lon = -76.600144
 	ref_lat = 39.070902
@@ -48,6 +46,7 @@ if __name__ == '__main__':
 	skip = 0
 	desiredIC = ()
 	to_write = 0
+	silent = 0
 
 
 	#read in arguments 
@@ -55,7 +54,8 @@ if __name__ == '__main__':
 		if skip == 1:
 			skip = 0
 		elif x == 0: # skip this since it is the function callable
-			print("Function called is:",sys.argv[x])
+			#print("Function called is:",sys.argv[x])
+			pass
 		elif sys.argv[x] == "-c":
 			config_file = sys.argv[x+1]
 			skip = 1
@@ -65,6 +65,9 @@ if __name__ == '__main__':
 		elif sys.argv[x] == "-p":
 			port = int(sys.argv[x+1])
 			skip = 1
+		elif sys.argv[x] == "-s":
+			silent = 1
+			skip = 0
 		else:
 			print("Unknown argument:", sys.argv[x])
 
@@ -98,7 +101,9 @@ if __name__ == '__main__':
 			print("Unknown config line:",line," ",len(line))
 
 	f.close()
-	print("List of icao:",desiredIC)
+	
+	if not silent:
+		print("List of icao:",desiredIC)
 
 
 
@@ -123,7 +128,8 @@ if __name__ == '__main__':
 		#get the icao
 		ic = pms.adsb.icao(line)
 		if ic in desiredIC:
-			print("Found desired IC:",ic)
+			if not silent:
+				print("Found desired IC:",ic)
 			to_write=1
 		
 		#Open the IC file
@@ -172,7 +178,8 @@ if __name__ == '__main__':
 		# Always print output
 		# Need to fix this up to make it more operational
 		if to_write:	
-			print(sout)
+			if not silent:
+				print(sout)
 			
 		# If print to file
 		if to_write:
