@@ -10,11 +10,13 @@ Currently in development, this should be taken as alpha at best.
 
 Arguments: 
 
--c config file location
+-c <config file location>
 
--i ipaddress (not a hostname)
+-i <ipaddress (not a hostname)>
 
--p port 
+-p <port>
+
+-s		Silent mode - No printf output
 
 python planefinder.py -i <IPAddress> -p <PORT> -c <FILENAME>
 
