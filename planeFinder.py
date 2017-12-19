@@ -127,13 +127,14 @@ if __name__ == '__main__':
 		
 		#get the icao
 		ic = pms.adsb.icao(line)
+		
 		if ic in desiredIC:
 			if not silent:
 				print("Found desired IC:",ic)
 			to_write=1
 		
 		#Open the IC file
-		# TODO: Better way to write in other places
+		# TODO: Better way to write in designated place
 		#ic_file="C:\\Users\\chuck\\Documents\\python\\planeFinder\\data\\"+ic+".txt"
 		ic_file="data/"+ic+".txt"
 		ic_f = open(ic_file, "a")
@@ -143,31 +144,41 @@ if __name__ == '__main__':
 		
 		df = pms.adsb.df(line)
 		tc = pms.adsb.typecode(line)
-		#whats the additional capabilities?
 		
-		if (df == 17 or df == 18) and tc >= 1 and tc <= 4: #identifier
-			id = pms.adsb.callsign(line)
-			lineout = "IC:"+str(ic)+" is:"+str(id)
-			to_write = 1
-		elif (df == 17 or df == 18) and tc >= 5 and tc <= 8: #surface positions
+		#Begin the decoder
+		if df == 0:
+			#this is only an icao number and identifier, nothing to log
 			pass
-		elif (df == 17 or df == 18) and tc >= 9 and tc <= 18: #airborne positions - "position message"
-			#do with only one message since we have the reference location
-			(lat,lon) = pms.adsb.airborne_position_with_ref(line, ref_lat, ref_lon)
-			alt = pms.adsb.altitude(line)
-			lineout = "IC:"+str(ic)+" is at:"+str(lat)+","+str(lon)+" and altitude:"+str(alt)+" ft."
-			to_write = 1
-		elif (df == 17 or df == 18) and tc == 19: #airborne velocity
-			#s_head = pms.adsb.speed_heading(line)
-			#s_v = pms.adsb.surface_velocity(line)
-			vel = pms.adsb.velocity(line)
-			lineout="IC:"+str(ic)+" heading:"+str(vel[1])+" vel:"+str(vel[0])+" kt climbing:"+str(vel[2])+" ft/min. "+str(vel[3])
-			to_write = 1
-		elif (df == 17 or df == 18) and tc >= 20 and tc <= 22: #Airborne position (w/ GNSS Height)	
+		elif df == 11:
+			#this is only an icao number and identifier, nothing to log
 			pass
-		elif (df == 17 or df == 18) and tc >= 23 and tc <= 31: #reserved	
-			pass
-		else: #This should never be gotten to 
+		elif (df == 17 or df == 18):
+		#this is a ADS-B message 
+			if tc >= 1 and tc <= 4: #identifier
+				id = pms.adsb.callsign(line)
+				lineout = "IC:"+str(ic)+" is:"+str(id)
+				to_write = 1
+			elif  tc >= 5 and tc <= 8: #surface positions
+				pass
+			elif (df == 17 or df == 18) and tc >= 9 and tc <= 18: #airborne positions - "position message"
+				#do with only one message since we have the reference location
+				(lat,lon) = pms.adsb.airborne_position_with_ref(line, ref_lat, ref_lon)
+				alt = pms.adsb.altitude(line)
+				lineout = "IC:"+str(ic)+" is at:"+str(lat)+","+str(lon)+" and altitude:"+str(alt)+" ft."
+				to_write = 1
+			elif (df == 17 or df == 18) and tc == 19: #airborne velocity
+				#s_head = pms.adsb.speed_heading(line)
+				#s_v = pms.adsb.surface_velocity(line)
+				vel = pms.adsb.velocity(line)
+				lineout="IC:"+str(ic)+" heading:"+str(vel[1])+" vel:"+str(vel[0])+" kt climbing:"+str(vel[2])+" ft/min. "+str(vel[3])
+				to_write = 1
+			elif (df == 17 or df == 18) and tc >= 20 and tc <= 22: #Airborne position (w/ GNSS Height)	
+				pass
+			elif (df == 17 or df == 18) and tc >= 23 and tc <= 31: #reserved	
+				pass
+			else: #Should never get to this.
+				pass
+		else: #This is a format that isn't implemented yet
 			pass
 			#lineout = (print "Unknown TC:",tc," or df:",df,"in line:",line)
 
