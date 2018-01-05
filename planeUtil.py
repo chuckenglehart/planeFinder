@@ -1,5 +1,6 @@
 """
-Utility functions that are used througout
+Utility functions that are used often
+
 """
 import time
 #from time import mktime

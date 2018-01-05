@@ -16,7 +16,11 @@ Arguments:
 
 -p <port>
 
--s		Silent mode - No printf output
+-s  Silent mode - No printf 
 
-python planefinder.py -i <IPAddress> -p <PORT> -c <FILENAME>
+-f  Write decoded information to file
+
+-d  Write decoded information to database
+
+python planefinder.py -i <IPAddress> -p <PORT> -c <FILENAME> -s -f -d 
 
