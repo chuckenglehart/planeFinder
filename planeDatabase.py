@@ -1,31 +1,30 @@
 """
 This has been written to target Python3
-Wrapper or utility for the planeFinder application. 
-
+Wrapper or utility for the planeFinder application.
 Need a database named planefinder with a user to access
 
 TODO - fix the F in finder
 Will create a table for every icao requested
 
 """
-import psycopg2
-import psycopg2.extras
-import planeUtil as pUtil
-from psycopg2 import sql
 from time import mktime
 from datetime import datetime
 from pprint import pprint
+import psycopg2
+import psycopg2.extras
+from psycopg2 import sql
+import planeUtil as pUtil
 
 
 def connect_to_plane_db():
     """
-    This function provides the connection to the planeFinder database. 
+    This function provides the connection to the planeFinder database.
 
      Note:
         For information about the database setup, please see wiki.
     Args:
         none: This may change in the future
-        
+
     Returns:
         conn: SQL connection from the psycopg2 lib
 
@@ -33,7 +32,7 @@ def connect_to_plane_db():
     #This connects to the db and return the connection
     #TODO: Don't have the password in code
     try:
-        conn=psycopg2.connect("dbname='planefinder' user='planeFinder' host='localhost'")    
+        conn = psycopg2.connect("dbname='planefinder' user='planeFinder' host='localhost'")
     except:
         print('I am unable to connect to the database.')
         return -1
@@ -41,20 +40,20 @@ def connect_to_plane_db():
 """End connect_to_plane_db"""
 
 
-def check_icao(cur, icao):    
+def check_icao(cur, icao):
     """
 
     ICAO must be converted to lowercase before being submitted to the database. Why?
 
     Note:
-        This checks for a table in the database that has a name equivalent to 
+        This checks for a table in the database that has a name equivalent to
         the icao string. If none exists, one is created. If the creation fails
         then False is returned.
-    
+
     Args:
         cur: (cursor): Connection cursor from psycopg2
-        icao (str): The ICAO(hex) in a string representation. 
-        
+        icao (str): The ICAO(hex) in a string representation.
+
     Returns:
         bool: True if made or exists. Returns true if not an error
 
@@ -90,23 +89,23 @@ def check_icao(cur, icao):
 """End check_icao"""
 
 
-def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx=''):    
+def insert(cur, icao, time, name='', lat=361, lon=361, alt=-1, IC='', head=-1, vel=-1, Vx=''):
     """
     insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx=''):
 
     Args:
         cur: (cursor): Connection cursor from psycopg2
-        icao (str): The ICAO(hex) in a string representation. 
+        icao (str): The ICAO(hex) in a string representation.
         time (time): Time that the event took place
         name (str, optional): Name value to insert
         lat (float, optional): Latitude value to insert
         lon (float, optional): Longitude value to insert
         alt (int, optional): Altitude (in feet) value to insert
         IC (str, optional): If given, will check to see if matches icao
-        dir (float, optional): Direction (in degrees) value to insert
+        head (float, optional): Direction (in degrees) value to insert
         vel (int, optional): Velocity (in MPH) value to insert
         Vx (int, optional): Rate fo altitude change (in feet/sec) to insert
-    
+
     Returns:
         bool: true if good, false if bad
 
@@ -116,7 +115,7 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
         VALUES ($time, $.......)
         ON CONFLICT (time) DO UPDATE
         SET parag=EXCLUDED.arg
-   
+
     Todo:
         Merge the many sql inserts into one
     """
@@ -126,7 +125,7 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
 
     if IC != '':
         if IC.lower() != icao.lower():
-            print("ICAO missmatch!",icao.lower(),"!=",IC.lower())
+            print("ICAO missmatch!", icao.lower(), "!=", IC.lower())
     if name != '':
         cur.execute(
             sql.SQL("""
@@ -134,7 +133,7 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
                 VALUES (%s,%s)
                 ON CONFLICT (time) DO UPDATE
                 SET name=EXCLUDED.name
-            """).format(sql.Identifier(icao.lower())),(dt,name))
+            """).format(sql.Identifier(icao.lower())), (dt, name))
     if lat != 361:
         cur.execute(
             sql.SQL("""
@@ -142,7 +141,7 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
                 VALUES (%s,%s)
                 ON CONFLICT (time) DO UPDATE
                 SET lat=EXCLUDED.lat
-            """).format(sql.Identifier(icao.lower())),(dt,lat))
+            """).format(sql.Identifier(icao.lower())), (dt, lat))
     if lon != 361:
         cur.execute(
             sql.SQL("""
@@ -150,7 +149,7 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
                 VALUES (%s,%s)
                 ON CONFLICT (time) DO UPDATE
                 SET lon=EXCLUDED.lon
-            """).format(sql.Identifier(icao.lower())),(dt,lon))
+            """).format(sql.Identifier(icao.lower())), (dt, lon))
     if alt != -1:
         cur.execute(
             sql.SQL("""
@@ -158,15 +157,15 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
                 VALUES (%s,%s)
                 ON CONFLICT (time) DO UPDATE
                 SET alt=EXCLUDED.alt
-            """).format(sql.Identifier(icao.lower())),(dt,alt))
-    if dir != -1:
+            """).format(sql.Identifier(icao.lower())), (dt, alt))
+    if head != -1:
         cur.execute(
             sql.SQL("""
                 INSERT INTO {} (time,dir)
                 VALUES (%s,%s)
                 ON CONFLICT (time) DO UPDATE
                 SET dir=EXCLUDED.dir
-            """).format(sql.Identifier(icao.lower())),(dt,dir))
+            """).format(sql.Identifier(icao.lower())), (dt, head))
     if vel != -1:
         cur.execute(
             sql.SQL("""
@@ -174,7 +173,7 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
                 VALUES (%s,%s)
                 ON CONFLICT (time) DO UPDATE
                 SET vel=EXCLUDED.vel
-            """).format(sql.Identifier(icao.lower())),(dt,vel))
+            """).format(sql.Identifier(icao.lower())), (dt, vel))
     if Vx != '':
         cur.execute(
             sql.SQL("""
@@ -182,32 +181,33 @@ def insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx='
                 VALUES (%s,%s)
                 ON CONFLICT (time) DO UPDATE
                 SET vx=EXCLUDED.vx
-            """).format(sql.Identifier(icao.lower())),(dt,Vx))
+            """).format(sql.Identifier(icao.lower())), (dt, Vx))
 """End insert"""
 
 
-def dict_from_timeframe(cur,icao,start=-1,end=-1):
+def dict_from_timeframe(cur, icao, start=-1, end=-1):
     """
     Returns a dictionary with values that are contained within whatever range
     Args:
         cur: (cursor): Connection cursor from psycopg2
-        icao (str): The ICAO(hex) in a string representation.  
+        icao (str): The ICAO(hex) in a string representation.
         start (time_struct, optional): Time to start the retrieval from
         end (time_struct, optional): Time to end the retrieval
 
     Returns:
         dict: dictionary containing time as the key and dictionary of the values
             for the selected time frame
-            
+
     Examples:
         To retrieve a dictionary with all of the information for as
         certain icao:
-            
+
         >>> dict_from_timeframe(cur,icao)
-    Note:        
+    Note:
         Timestamps need to be in time_struct format
         SQL:
-        select * from ADDC1A where time > make_timestamp(2017,12,22,15,0,0) and time < make_timestamp(2017,12,22,16,0,0)
+        select * from ADDC1A where time > make_timestamp(2017,12,22,15,0,0)
+        and time < make_timestamp(2017,12,22,16,0,0)
     """
 
     if start == -1 and end == -1:
@@ -224,17 +224,16 @@ def dict_from_timeframe(cur,icao,start=-1,end=-1):
                 SELECT * FROM {}
                 WHERE time < %s
                 ORDER BY time
-            """).format(sql.Identifier(icao.lower())),(dt_end,))
+            """).format(sql.Identifier(icao.lower())), (dt_end,))
     elif end == -1:
         #return all from start on
-        pass
         dt_start = datetime.fromtimestamp(mktime(start))
         cur.execute(
             sql.SQL("""
                 SELECT * FROM {}
                 WHERE time > %s
                 ORDER BY time
-            """).format(sql.Identifier(icao.lower())),(dt_start,))
+            """).format(sql.Identifier(icao.lower())), (dt_start,))
     else:
         #return some both
         dt_start = datetime.fromtimestamp(mktime(start))
@@ -244,7 +243,7 @@ def dict_from_timeframe(cur,icao,start=-1,end=-1):
                 SELECT * FROM {}
                 WHERE time > %s and time < %s
                 ORDER BY time
-            """).format(sql.Identifier(icao.lower())),(dt_start,dt_end))
+            """).format(sql.Identifier(icao.lower())), (dt_start, dt_end))
 
     res = cur.fetchall()
     ret = []
@@ -256,7 +255,7 @@ def dict_from_timeframe(cur,icao,start=-1,end=-1):
 """End dict_from_timeframe"""
 
 
-def get_dict(cur,icao):
+def get_dict(cur, icao):
     """
     Wrapper to make it simpler to get all values for an ICAO
     into a dictionary
@@ -268,7 +267,7 @@ def get_dict(cur,icao):
         dict: dictionary containing time as the key and dictionary of the values
             for the selected time frame
     """
-    return dict_from_timeframe(cur,icao)
+    return dict_from_timeframe(cur, icao)
 """End get_dict"""
 
 
@@ -276,15 +275,15 @@ def get_all_tables(cur):
     """
     Function returns a list of all tables contained in the database referred to by
     the input cursor.
-    
+
     Args:
         cur: (cursor): Connection cursor from psycopg2
-    
+
     Returns:
-        list: A list of public table names in the current database. 
+        list: A list of public table names in the current database.
             When used on planefinder, this is the list of the icao's that
-            are stored in the database. 
-        
+            are stored in the database.
+
     Todo:
         Make sure it is actually a list.
     """
