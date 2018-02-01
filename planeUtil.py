@@ -3,6 +3,7 @@ Utility functions that are used often
 
 """
 import time
+from datetime import datetime
 
 #Quick function to see if a character is a hex
 def ishex(string):
