@@ -47,7 +47,7 @@ if __name__ == '__main__':
     print('Output is :', output_filename)
 
     #Create the data storage
-    dict=pd.create_dict_original(filename)
+    dict=pd.get_dict_from_file(filename)
     #pprint(dict)
     
     #check to see if there is a start and end
