@@ -42,180 +42,6 @@ def connect_to_plane_db():
     return conn
 """End connect_to_plane_db"""
 
-
-
-def insert_old(cur, icao, time, name='', lat=361, lon=361, alt=-1, IC='', head=-1, vel=-1, Vx=''):
-    """
-    insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx=''):
-
-    Args:
-        cur: (cursor): Connection cursor from psycopg2
-        icao (str): The ICAO(hex) in a string representation.
-        time (time): Time that the event took place
-        name (str, optional): Name value to insert
-        lat (float, optional): Latitude value to insert
-        lon (float, optional): Longitude value to insert
-        alt (int, optional): Altitude (in feet) value to insert
-        IC (str, optional): If given, will check to see if matches icao
-        head (float, optional): Direction (in degrees) value to insert
-        vel (int, optional): Velocity (in MPH) value to insert
-        Vx (int, optional): Rate fo altitude change (in feet/sec) to insert
-
-    Returns:
-        bool: true if good, false if bad
-
-    Note:
-        SQL query modeled after:
-        INSERT INTO $icao (time,othernames,......)
-        VALUES ($time, $.......)
-        ON CONFLICT (time) DO UPDATE
-        SET parag=EXCLUDED.arg
-
-    Todo:
-        Merge the many sql inserts into one
-    """
-
-    check_icao(cur, icao)
-    dt = datetime.fromtimestamp(mktime(time))
-
-    if IC != '':
-        if IC.lower() != icao.lower():
-            print("ICAO missmatch!", icao.lower(), "!=", IC.lower())
-    if name != '':
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,name)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET name=EXCLUDED.name
-            """).format(sql.Identifier(icao.lower())), (dt, name))
-    if lat != 361:
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,lat)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET lat=EXCLUDED.lat
-            """).format(sql.Identifier(icao.lower())), (dt, lat))
-    if lon != 361:
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,lon)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET lon=EXCLUDED.lon
-            """).format(sql.Identifier(icao.lower())), (dt, lon))
-    if alt != -1:
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,alt)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET alt=EXCLUDED.alt
-            """).format(sql.Identifier(icao.lower())), (dt, alt))
-    if head != -1:
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,dir)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET dir=EXCLUDED.dir
-            """).format(sql.Identifier(icao.lower())), (dt, head))
-    if vel != -1:
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,vel)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET vel=EXCLUDED.vel
-            """).format(sql.Identifier(icao.lower())), (dt, vel))
-    if Vx != '':
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,vx)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET vx=EXCLUDED.vx
-            """).format(sql.Identifier(icao.lower())), (dt, Vx))
-"""End insert"""
-
-def insert_new(cur, icao, time, name='', lat=361, lon=361, alt=-1, IC='', head=-1, vel=-1, Vx=''):
-    """
-    insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx=''):
-
-    Args:
-        cur: (cursor): Connection cursor from psycopg2
-        icao (str): The ICAO(hex) in a string representation.
-        time (time): Time that the event took place
-        name (str, optional): Name value to insert
-        lat (float, optional): Latitude value to insert
-        lon (float, optional): Longitude value to insert
-        alt (int, optional): Altitude (in feet) value to insert
-        IC (str, optional): If given, will check to see if matches icao
-        head (float, optional): Direction (in degrees) value to insert
-        vel (int, optional): Velocity (in MPH) value to insert
-        Vx (int, optional): Rate fo altitude change (in feet/sec) to insert
-
-    Returns:
-        bool: true if good, false if bad
-
-    Note:
-        SQL query modeled after:
-        INSERT INTO $icao (time,othernames,......)
-        VALUES ($time, $.......)
-        ON CONFLICT (time) DO UPDATE
-        SET parag=EXCLUDED.arg
-
-    Todo:
-        Merge the many sql inserts into one
-    """
-
-    check_icao(cur, icao)
-    dt = datetime.fromtimestamp(mktime(time))
-    
-    #insert name
-    #pd.insert(cur,ic,t,name=str(id))
-
-    #insert lat lon alt
-    #pd.insert(cur,ic,t,lat=lat,lon=lon,alt=alt)
-
-    #insert heading velocity updown
-    #pd.insert(cur,ic,t,head=vel[1],vel=vel[0],Vx=vel[2])
-    
-    if IC != '':
-        if IC.lower() != icao.lower():
-            print("ICAO missmatch!", icao.lower(), "!=", IC.lower())
-    if name != '':
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,name)
-                VALUES (%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET name=EXCLUDED.name
-            """).format(sql.Identifier(icao.lower())), (dt, name))
-    elif lat != 361:
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,lat,lon,alt)
-                VALUES (%s,%s,%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET lat=EXCLUDED.lat,
-                lon=EXCLUDED.lon,
-                alt=EXCLUDED.alt
-            """).format(sql.Identifier(icao.lower())), (dt, lat, lon, alt))
-    elif head != -1:
-        cur.execute(
-            sql.SQL("""
-                INSERT INTO {} (time,dir, vel, vx)
-                VALUES (%s,%s,%s,%s)
-                ON CONFLICT (time) DO UPDATE
-                SET dir=EXCLUDED.dir, 
-                vel=EXCLUDED.vel,
-                vx=EXCLUDED.vx
-            """).format(sql.Identifier(icao.lower())), (dt, head, vel, Vx))           
-"""End insert"""
-
-
 def get_dict_from_file(filename):
     """Create a dictionary from the original formated file. 
         A better ICD'd format will be created and followed.
@@ -284,76 +110,7 @@ def get_dict_from_file(filename):
     file.close()
     return top_dict
 """End get_dict_from_file"""
-
-
-def create_dict_original(filename):
-    """Create a dictionary from the original formated file. 
-        A better ICD'd format will be created and followed.
-        Takes in a filename and returns with a key of times and a value of a dictionary.     
-    """
-    
-    #open file 
-    try:
-        file = open(filename,'r')
-    except:
-        print("Error opening:", filename)
-        raise
-    
-    """
-    Dictionary is used to store dictionaries. 
-    Upper dict has a kay of the time and the value of the dict with the values
-    Vales dict has keys of:
-        lat, lon, alt, heading, vel, climbing, name
-    """
-    top_dict = {}
-    for line in file:
-        
-        #get the time - first 17 characters and turn in into a time struct
-        try:
-            line_time = pUtil.custom_time_decode(line[0:17])
-        except:
-           print("Unexpected error:", sys.exc_info()[0])
-           continue
-        #find key associated with that time
-        try:
-            sub_dict = top_dict[line_time]
-        except:
-            #if key doesn't exist create it
-            top_dict[line_time] = {}
-            sub_dict = {}
-            
-        #split by spaces
-        words = line.split()
-        for word in words:
-            #split by : -> if not 2 args then skip anyway
-            subs = word.split(':')
-            if len(subs) == 2:
-                #if it starts whatever, put in that place
-                if subs[0] == 'is':
-                    sub_dict['name'] = subs[1]
-                elif subs[0] == 'at':
-                    ll = str(subs[1]).split(',')
-                    sub_dict['lat'] = ll[0]
-                    sub_dict['lon'] = ll[1]
-                elif subs[0] == 'altitude': 
-                    sub_dict['alt'] = subs[1]
-                elif subs[0] == 'IC': 
-                    sub_dict['IC'] = subs[1]
-                elif subs[0] == 'heading':
-                    sub_dict['dir'] = subs[1]
-                elif subs[0] == 'vel':
-                    sub_dict['vel'] = subs[1]
-                elif subs[0] == 'climbing':
-                    sub_dict['Vx'] = subs[1]
-                else:    #TODO: Add the rest of the stuff
-                    print(word)
-                    pass # nothing to do with this line
-        top_dict[line_time] = sub_dict
-        
-    file.close()
-    return top_dict
-
-    
+   
 #Beginning of a class
 class dbConnection:
     """A class used to wrap the database functions"""
@@ -367,7 +124,8 @@ class dbConnection:
             #deal with error
             exit()
         self.cur = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        
+    """End __init___"""        
+    
     def connect_to_plane_db(self):
         """
         This function provides the connection to the planeFinder database.
@@ -600,11 +358,9 @@ class dbConnection:
                     ON CONFLICT (time) DO UPDATE
                     %s
                     """).format(sql.Identifier(icao.lower())), (AsIs(k), AsIs(v), AsIs(s)))
-                    
     """End insert"""
-
     
-    def dict_from_timeframe(self, icao, start=-1, end=-1):
+    def get_dict_from_timeframe(self, icao, start=-1, end=-1):
         """
         Returns a dictionary with values that are contained within whatever range
         Args:
@@ -621,7 +377,7 @@ class dbConnection:
             To retrieve a dictionary with all of the information for as
             certain icao:
 
-            >>> dict_from_timeframe(cur,icao)
+            >>> get_dict_from_timeframe(cur,icao)
         Note:
             Timestamps need to be in time_struct format
             SQL:
@@ -631,14 +387,14 @@ class dbConnection:
 
         if start == -1 and end == -1:
             #return all
-            cur.execute(
+            self.cur.execute(
                 sql.SQL("""
                     SELECT * FROM {} ORDER BY time
                 """).format(sql.Identifier(icao.lower())))
         elif start == -1:
             #return all up to end
             dt_end = datetime.fromtimestamp(mktime(end))
-            cur.execute(
+            self.cur.execute(
                 sql.SQL("""
                     SELECT * FROM {}
                     WHERE time < %s
@@ -647,7 +403,7 @@ class dbConnection:
         elif end == -1:
             #return all from start on
             dt_start = datetime.fromtimestamp(mktime(start))
-            cur.execute(
+            self.cur.execute(
                 sql.SQL("""
                     SELECT * FROM {}
                     WHERE time > %s
@@ -657,21 +413,25 @@ class dbConnection:
             #return some both
             dt_start = datetime.fromtimestamp(mktime(start))
             dt_end = datetime.fromtimestamp(mktime(end))
-            cur.execute(
+            self.cur.execute(
                 sql.SQL("""
                     SELECT * FROM {}
                     WHERE time > %s and time < %s
                     ORDER BY time
                 """).format(sql.Identifier(icao.lower())), (dt_start, dt_end))
 
-        res = cur.fetchall()
-        ret = []
+        res = self.cur.fetchall()
+        ret = {}
         #TODO: Key on TIME
         for row in res:
-            ret.append(dict(row))
-
+            #ret.append(dict(row))
+            td = dict(row)
+            time = td['time']
+            del td['time']
+            ret[time]=td
+            
         return ret
-    """End dict_from_timeframe"""
+    """End get_dict_from_timeframe"""
 
     def get_dict(self, icao):
         """
@@ -685,7 +445,7 @@ class dbConnection:
             dict: dictionary containing time as the key and dictionary of the values
                 for the selected time frame
         """
-        return self.dict_from_timeframe(self, icao)
+        return self.get_dict_from_timeframe(icao)
     """End get_dict"""
 
     def get_all_tables(self):
@@ -762,4 +522,4 @@ class dbConnection:
         return self.connection.closed
     """End close_db_connection"""
     
-"""End dbConnection"""
+"""End dbConnection class"""
