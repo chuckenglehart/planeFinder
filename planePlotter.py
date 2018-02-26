@@ -35,8 +35,15 @@ if __name__ == '__main__':
         
     debug = args.debug
     
-    icao = args.icao[0]
-    filename="data/"+icao+".txt"
+    icao = args.icao[0]        
+    dbc = pd.dbConnection() 
+    if dbc.get_connection_isopen():
+        print("Database connection open")
+    else:
+        dbc = -1
+        print("Database connection not open")
+
+    #filename="data/"+icao+".txt"
     
     try:
         #get the name from an io txt wrapper
@@ -47,8 +54,9 @@ if __name__ == '__main__':
     print('Output is :', output_filename)
 
     #Create the data storage
-    dict=pd.get_dict_from_file(filename)
-    #pprint(dict)
+    dict=dbc.get_dict(icao)
+    #dataList=dbc.get_dict(icao)
+    pprint(dict)
     
     #check to see if there is a start and end
     try:
@@ -75,10 +83,28 @@ if __name__ == '__main__':
     lats = []
     lons = []
     gmap = gmplot.GoogleMapPlotter(39.0709, -76.60024, 8)
+    
+    """
+    for row in dataList:
+        pprint(row['time'])
+        if start != -1:
+            if row['time'] < start:
+                continue
+        if end != -1:
+            if row['time'] > end:
+                continue
+
+        if 'lat' in row and type(row['lat']) is float:
+            lats.append(float(row['lat']))
+            lons.append(float(row['lon']))
+            #print(float(td['lat']),",",float(td['lon']))
+    """
+    #need to rewrite the get dict to make this work
+    #temportarily using the above to amek a list work
+    
     d_keys = iter(dict.keys()) 
     
     for key in d_keys:
-        use = 0
         if start != -1:
             if key < start:
                 continue
@@ -87,11 +113,11 @@ if __name__ == '__main__':
                 continue
  
         td = dict[key]
-        if 'lat' in td:
+        if 'lat' in td and type(td['lat']) is float:
             lats.append(float(td['lat']))
             lons.append(float(td['lon']))
             #print(float(td['lat']),",",float(td['lon']))
-            
+          
     gmap.heatmap(lats,lons)
     #gmap.plot(latitudes, longitudes, 'cornflowerblue', edge_width=10)
     #gmap.scatter(more_lats, more_lngs, '#3B0B39', size=40, marker=False)
