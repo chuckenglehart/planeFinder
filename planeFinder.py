@@ -20,8 +20,6 @@ def getLine(socket):
         elif str(char) != '\n' and str(char) != '*' and char != ';':
             ret+=str(char)
     return ret
-
-
     
     
 if __name__ == '__main__':    
@@ -34,6 +32,7 @@ if __name__ == '__main__':
     identifier_string = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ#####_###############0123456789######"
     config_file = ""
     ip_addr = ""
+    file_directory="data"
     #default port is 30002
     port = 30002
     skip = 0
@@ -69,6 +68,9 @@ if __name__ == '__main__':
         elif sys.argv[x] == "-f":
             write_to_file = 1
             skip = 0
+        elif sys.argv[x] == "-w":
+            file_directory = sys.argv[x+1]
+            skip = 1
         else:
             print("Unknown argument:", sys.argv[x])
 
@@ -149,7 +151,7 @@ if __name__ == '__main__':
         # TODO: Better way to write in designated place
         #ic_file="C:\\Users\\chuck\\Documents\\python\\planeFinder\\data\\"+ic+".txt"
         if write_to_file == 1:
-            ic_file="data/"+ic+".txt"
+            ic_file=file_directory+"/"+ic+".txt"
             ic_f = open(ic_file, "a")
             
         # Initialize the lineout
@@ -178,7 +180,14 @@ if __name__ == '__main__':
                 if dbc != -1: #use_database == 1:
                     dbc.insert(ic,t,name=str(id))
             elif tc >= 5 and tc <= 8:
-                #surface positions
+                #surface positions - compact position reporting
+                #do with only one message since we have the reference location
+                #(lat,lon) = pms.adsb.airborne_position_with_ref(line, ref_lat, ref_lon)
+                #alt = pms.adsb.altitude(line)
+                #lineout = "IC:"+str(ic)+" is at:"+str(lat)+","+str(lon)+" and altitude:"+str(alt)+" ft. SP"
+                #to_write = 1
+                #if dbc != -1: #use_database == 1:
+                #    dbc.insert(ic,t,lat=lat,lon=lon,alt=alt)
                 pass
             elif tc >= 9 and tc <= 18:
                 #airborne positions - "position message"
@@ -201,8 +210,11 @@ if __name__ == '__main__':
             elif tc >= 20 and tc <= 22:
                 #Airborne position (w/ GNSS Height)    
                 pass
-            elif tc >= 23 and tc <= 31:
-                #reserved    
+            elif tc >= 23 and tc <= 30:
+                #reserved
+                pass
+            elif tc == 31:
+                #Aircraft Operation Status
                 pass
             else:
                 #Should never get to this.
@@ -218,7 +230,7 @@ if __name__ == '__main__':
         # Need to fix this up to make it more operational
         if to_write:    
             if not silent:
-                pass#print(sout)
+                print(sout)
             
         # If print to file
         if to_write and write_to_file:
