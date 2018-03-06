@@ -8,17 +8,16 @@ Will create a table for every icao requested
 
 """
 
-import planeUtil as pUtil
-from pprint import pprint
+import sys
+from time import mktime
+from datetime import datetime
 import psycopg2
 import psycopg2.extras
 from psycopg2 import sql
 from psycopg2.extensions import AsIs
-from time import mktime
-from datetime import datetime
-import sys
+import planeUtil as pUtil
 
-#This isn't private yet since it doesn't rely on anything from the self class. 
+#This isn't private yet since it doesn't rely on anything from the self class.
 def connect_to_plane_db():
     """
     This function provides the connection to the planeFinder database.
@@ -43,19 +42,19 @@ def connect_to_plane_db():
 """End connect_to_plane_db"""
 
 def get_dict_from_file(filename):
-    """Create a dictionary from the original formated file. 
+    """Create a dictionary from the original formated file.
         A better ICD'd format will be created and followed.
-        Takes in a filename and returns with a key of times and a value of a dictionary.     
-        
-        
+        Takes in a filename and returns with a key of times and a value of a dictionary.
+
+
     """
-    
+
     try:
-        file = open(filename,'r')
+        file = open(filename, 'r')
     except:
         print("Error opening:", filename)
         raise
-    
+
     """
     Dictionary is used to store dictionaries. 
     Upper dict has a kay of the time and the value of the dict with the values
@@ -64,13 +63,13 @@ def get_dict_from_file(filename):
     """
     top_dict = {}
     for line in file:
-        
+
         #get the time - first 17 characters and turn in into a time struct
         try:
             line_time = pUtil.custom_time_decode(line[0:17])
         except:
-           print("Unexpected error:", sys.exc_info()[0])
-           continue
+            print("Unexpected error:", sys.exc_info()[0])
+            continue
         #find key associated with that time
         try:
             sub_dict = top_dict[line_time]
@@ -78,7 +77,7 @@ def get_dict_from_file(filename):
             #if key doesn't exist create it
             top_dict[line_time] = {}
             sub_dict = {}
-            
+
         #split by spaces
         words = line.split()
         for word in words:
@@ -89,12 +88,12 @@ def get_dict_from_file(filename):
                 if subs[0] == 'is':
                     sub_dict['name'] = subs[1]
                 elif subs[0] == 'at':
-                    ll = str(subs[1]).split(',')
-                    sub_dict['lat'] = ll[0]
-                    sub_dict['lon'] = ll[1]
-                elif subs[0] == 'altitude': 
+                    lat_lon = str(subs[1]).split(',')
+                    sub_dict['lat'] = lat_lon[0]
+                    sub_dict['lon'] = lat_lon[1]
+                elif subs[0] == 'altitude':
                     sub_dict['alt'] = subs[1]
-                elif subs[0] == 'IC': 
+                elif subs[0] == 'IC':
                     sub_dict['IC'] = subs[1]
                 elif subs[0] == 'heading':
                     sub_dict['dir'] = subs[1]
@@ -104,17 +103,16 @@ def get_dict_from_file(filename):
                     sub_dict['Vx'] = subs[1]
                 else:    #TODO: Add the rest of the stuff
                     print(word)
-                    pass # nothing to do with this line
         top_dict[line_time] = sub_dict
-        
+
     file.close()
     return top_dict
 """End get_dict_from_file"""
-   
+
 #Beginning of a class
-class dbConnection:
+class DBConnection:
     """A class used to wrap the database functions"""
-    
+
     def __init__(self):
         self.planes_seen = []
         self.connection = -1
@@ -124,8 +122,8 @@ class dbConnection:
             #deal with error
             exit()
         self.cur = self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    """End __init___"""        
-    
+    """End __init___"""
+
     def connect_to_plane_db(self):
         """
         This function provides the connection to the planeFinder database.
@@ -147,11 +145,11 @@ class dbConnection:
             print('I am unable to connect to the database.')
             #should probably raise an error
         self.connection = new_connection
-    """End connect_to_plane_db"""    
-    
+    """End connect_to_plane_db"""
+
     def check_icao(self, icao, create=True):
         """
-        ICAO must be converted to lowercase before being submitted to the database. 
+        ICAO must be converted to lowercase before being submitted to the database.
         Why? It is a postgresql thing
 
         Note:
@@ -166,10 +164,10 @@ class dbConnection:
         Returns:
             bool: True if made or exists. Returns true if not an error
         """
-        
+
         if icao in self.planes_seen:
             return True
-        
+
         # check if table exists. Return true if does
         self.cur.execute("select * from information_schema.tables where table_name=%s", (icao.lower(),))
         exists = bool(self.cur.rowcount)
@@ -178,7 +176,7 @@ class dbConnection:
             return exists
         if not create:
             return exists
-            
+
         # create table
         self.cur.execute(
             sql.SQL("""
@@ -203,13 +201,13 @@ class dbConnection:
         #Failed to create new table. Just return false for now
         return False
     """End check_icao"""
-    
+
     def insert_many(self, icao, time, name='', lat=361, lon=361, alt=-1, IC='', head=-1, vel=-1, Vx=''):
         """
         insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx=''):
 
         Args:
-            self (dbConnection): self reference
+            self (DBConnection): self reference
             icao (str): The ICAO(hex) in a string representation.
             time (time): Time that the event took place
             name (str, optional): Name value to insert
@@ -237,7 +235,7 @@ class dbConnection:
 
         self.check_icao(icao)
         dt = datetime.fromtimestamp(mktime(time))
-        
+
         #insert name
         #pd.insert(cur,ic,t,name=str(id))
 
@@ -246,7 +244,7 @@ class dbConnection:
 
         #insert heading velocity updown
         #pd.insert(cur,ic,t,head=vel[1],vel=vel[0],Vx=vel[2])
-        
+
         if IC != '':
             if IC.lower() != icao.lower():
                 print("ICAO missmatch!", icao.lower(), "!=", IC.lower())
@@ -277,7 +275,7 @@ class dbConnection:
                     SET dir=EXCLUDED.dir, 
                     vel=EXCLUDED.vel,
                     vx=EXCLUDED.vx
-                """).format(sql.Identifier(icao.lower())), (dt, head, vel, Vx))           
+                """).format(sql.Identifier(icao.lower())), (dt, head, vel, Vx))
     """End insert"""
 
     def insert(self, icao, time, name='', lat=361, lon=361, alt=-1, IC='', head=-1, vel=-1, Vx=''):
@@ -285,7 +283,7 @@ class dbConnection:
         insert(cur,icao,time,name='',lat=361,lon=361,alt=-1,IC='',dir=-1,vel=-1,Vx=''):
 
         Args:
-            self (dbConnection): self reference
+            self (DBConnection): self reference
             icao (str): The ICAO(hex) in a string representation.
             time (time): Time that the event took place
             name (str, optional): Name value to insert
@@ -347,10 +345,10 @@ class dbConnection:
             keys = keys + ('vx',)
             values = values + (Vx,)
             set = set + ('vx=EXCLUDED.vx \n',)
-            
-        k="(" + ", ".join( str(x) for x in keys) + ")"
-        v="(\'" + "\', \'".join( str(x) for x in values) + "\')"
-        s="SET " + ", ".join( str(x) for x in set) + ""
+
+        k = "(" + ", ".join(str(x) for x in keys) + ")"
+        v = "(\'" + "\', \'".join(str(x) for x in values) + "\')"
+        s = "SET " + ", ".join(str(x) for x in set) + ""
         self.cur.execute(
             sql.SQL("""
                     INSERT INTO {} %s
@@ -359,12 +357,12 @@ class dbConnection:
                     %s
                     """).format(sql.Identifier(icao.lower())), (AsIs(k), AsIs(v), AsIs(s)))
     """End insert"""
-    
+
     def get_dict_from_timeframe(self, icao, start=-1, end=-1):
         """
         Returns a dictionary with values that are contained within whatever range
         Args:
-            self (dbConnection): self reference
+            self (DBConnection): self reference
             icao (str): The ICAO(hex) in a string representation.
             start (time_struct, optional): Time to start the retrieval from
             end (time_struct, optional): Time to end the retrieval
@@ -428,8 +426,8 @@ class dbConnection:
             td = dict(row)
             time = td['time']
             del td['time']
-            ret[time]=td
-            
+            ret[time] = td
+
         return ret
     """End get_dict_from_timeframe"""
 
@@ -438,7 +436,7 @@ class dbConnection:
         Wrapper to make it simpler to get all values for an ICAO
         into a dictionary
         Args:
-            self (dbConnection): self reference
+            self (DBConnection): self reference
             icao (str): The ICAO(hex) in a string representation.
 
         Returns:
@@ -454,7 +452,7 @@ class dbConnection:
         the input cursor.
 
         Args:
-            self (dbConnection): self reference
+            self (DBConnection): self reference
 
         Returns:
             list: A list of public table names in the current database.
@@ -477,49 +475,36 @@ class dbConnection:
             ret.append(row[0])
 
         return ret
-    """End get_all_tables"""    
-    
-    def get_all_tables(self):
+    """End get_all_tables"""
+
+    def get_connection_isopen(self):
         """
-        Function returns a list of all tables contained in the database referred to by
-        the input cursor.
+        Function returns the status of the database connection
 
         Args:
-            self (dbConnection): self reference
+            self (DBConnection): self reference
 
         Returns:
-            list: A list of public table names in the current database.
-                When used on planefinder, this is the list of the icao's that
-                are stored in the database.
-
-        Todo:
-            Make sure it is actually a list.
+            bool: True if the connection is open
         """
-        self.cur.execute("""
-                    SELECT table_name
-                    FROM information_schema.tables
-                    WHERE table_schema='public'
-                    AND table_type='BASE TABLE'
-                    ORDER BY table_name
-                    """)
-        res = self.cur.fetchall()
-        ret = []
-        for row in res:
-            ret.append(row[0])
-
-        return ret
-    """End get_all_tables"""    
-    
-    def get_connection_isopen(self):
         #return if it is connected4
         #Read-only integer attribute: 0 if the connection is open, nonzero if it is closed or broken.
         return (not self.connection.closed)
-    """End get_connection_isopen"""    
-    
+    """End get_connection_isopen"""
+
     def close_db_connection(self):
+        """
+        Closes the database connection
+
+        Args:
+            self (DBConnection): self reference
+
+        Returns:
+            bool: True if the connection is closed
+        """
         #return if it is connected4
         self.connection.close()
         return self.connection.closed
     """End close_db_connection"""
-    
-"""End dbConnection class"""
+
+"""End DBConnection class"""
